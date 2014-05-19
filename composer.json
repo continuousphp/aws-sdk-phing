@@ -1,0 +1,23 @@
+{
+    "name":     "continuousphp/aws-sdk-phing",
+    "homepage": "https://github.com/continuousphp/aws-sdk-phing",
+    "description": "phing tasks for Amazon AWS",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Frederic Dewinne",
+            "email": "frederic@continuousphp.com"
+        }
+    ],
+    "require":  {
+        "php":                                      ">=5.4",
+        "aws/aws-sdk-php":                          "1.2.*",
+        "phing/phing":                              "2.7.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Aws\\": "src/"
+        }
+    }
+}

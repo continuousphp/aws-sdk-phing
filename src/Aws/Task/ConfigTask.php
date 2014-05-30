@@ -99,14 +99,15 @@ class ConfigTask extends AbstractTask
      */
     public function main()
     {
-        if ($this->getKey() && $this->getSecret() && $this->getRegion()) {
-            $config = [
-                'region' => $this->getRegion(),
-                'key' => $this->getKey(),
-                'secret' => $this->getSecret()
-            ];
-        } else {
-            $config = [];
+        $config = [];
+
+        if ($this->getRegion()) {
+            $config['region'] = $this->getRegion();
+        }
+
+        if ($this->getKey() && $this->getSecret()) {
+            $config['key'] = $this->getKey();
+            $config['secret'] = $this->getSecret();
         }
 
         $this->setServiceLocator(Aws::factory($config));

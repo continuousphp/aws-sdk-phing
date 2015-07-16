@@ -163,7 +163,7 @@ class RunStackTask extends AbstractTask
                 'TemplateBody' => file_get_contents($this->getTemplatePath()),
                 'Parameters'    => $this->getParamsArray()
             ]);
-        } catch(CloudFormationException $e) {
+        } catch (CloudFormationException $e) {
             if ($this->getUpdateOnConflict()) {
                 $cloudFormation->createStack([
                     'StackName' => $this->getName(),
@@ -173,6 +173,34 @@ class RunStackTask extends AbstractTask
             } else {
                 throw new \BuildException('Stack ' . $this->getName() . ' already exists!');
             }
+        }
+        
+        while (!$this->stackIsReady()) {
+            sleep(3);
+            $this->log("Wating for stack provisioning...");
+        }
+    }
+    
+    protected function stackIsReady()
+    {
+        try {
+            $stack = $this->getService()
+                ->describeStacks([
+                    'StackName' => $this->getName()
+                ]);
+            switch ($stack['Stack']['StackStatus']) {
+                case 'CREATE_COMPLETE':
+                case 'UPDATE_COMPLETE':
+                case 'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS':
+                    return true;
+                case 'UPDATE_IN_PROGRESS':
+                case 'CREATE_IN_PROGRESS':
+                    return false;
+                default:
+                    throw new \BuildException('Failed to run stack ' . $this->getName() . '!');
+            }
+        } catch (CloudFormationException $e) {
+            return false;
         }
     }
 

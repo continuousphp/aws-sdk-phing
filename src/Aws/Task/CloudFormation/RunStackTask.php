@@ -216,6 +216,7 @@ class RunStackTask extends AbstractTask
                 case 'UPDATE_COMPLETE':
                 case 'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS':
                     return true;
+                case '':
                 case 'UPDATE_IN_PROGRESS':
                 case 'CREATE_IN_PROGRESS':
                     return false;

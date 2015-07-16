@@ -35,6 +35,11 @@ class ConfigTask extends AbstractTask
     /**
      * @var string
      */
+    protected $profile;
+
+    /**
+     * @var string
+     */
     protected $region;
 
     /**
@@ -95,6 +100,22 @@ class ConfigTask extends AbstractTask
     }
 
     /**
+     * @return string
+     */
+    public function getProfile()
+    {
+        return $this->profile;
+    }
+
+    /**
+     * @param string $profile
+     */
+    public function setProfile($profile)
+    {
+        $this->profile = $profile;
+    }
+    
+    /**
      * Task entry point
      */
     public function main()
@@ -108,6 +129,8 @@ class ConfigTask extends AbstractTask
         if ($this->getKey() && $this->getSecret()) {
             $config['key'] = $this->getKey();
             $config['secret'] = $this->getSecret();
+        } elseif ($this->getProfile()) {
+            $config['profile'] = $this->getProfile();
         }
 
         $this->setServiceLocator(Aws::factory($config));

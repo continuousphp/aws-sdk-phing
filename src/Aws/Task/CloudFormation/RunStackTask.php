@@ -204,6 +204,16 @@ class RunStackTask extends AbstractTask
             sleep(3);
             $this->log("Wating for stack provisioning...");
         }
+        
+        $stacks = $cloudFormation->describeStacks([
+            'StackName' => $this->getName()
+        ]);
+        
+        $output = '';
+        foreach ($stacks['Stacks'][0]['Outputs'] as $row) {
+            $output.= $row['OutputKey'] . ': ' . $row['OutputValue'] . PHP_EOL;
+        }
+        $this->log($output);
     }
 
     protected function stackIsReady()

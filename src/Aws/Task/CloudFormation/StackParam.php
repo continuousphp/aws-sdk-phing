@@ -82,6 +82,9 @@ class StackParam
      * @return $this
      */
     public function setValue($value) {
+        if (is_bool($value)) {
+            $value = $value ? 'true' : 'false';
+        }
         $this->value = $value;
 
         return $this;

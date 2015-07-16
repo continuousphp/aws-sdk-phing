@@ -202,7 +202,7 @@ class RunStackTask extends AbstractTask
 
         while (!$this->stackIsReady()) {
             sleep(3);
-            $this->log("Wating for stack provisioning...");
+            $this->log("Waiting for stack provisioning...");
         }
         
         $stacks = $cloudFormation->describeStacks([

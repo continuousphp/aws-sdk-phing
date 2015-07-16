@@ -220,7 +220,7 @@ class RunStackTask extends AbstractTask
                 case 'CREATE_IN_PROGRESS':
                     return false;
                 default:
-                    throw new \BuildException('Failed to run stack ' . $this->getName() . '!');
+                    throw new \BuildException('Failed to run stack ' . $this->getName() . ' (' . $stack['Stack']['StackStatus'] . ') !');
             }
         } catch (CloudFormationException $e) {
             return false;

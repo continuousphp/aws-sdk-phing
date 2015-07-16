@@ -13,7 +13,7 @@
     "require":  {
         "php":                                      ">=5.4",
         "aws/aws-sdk-php":                          "~2.6",
-        "phing/phing":                              "~2.7.0"
+        "phing/phing":                              "~2.7"
     },
     "autoload": {
         "psr-0": {

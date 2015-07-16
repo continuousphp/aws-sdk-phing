@@ -25,13 +25,13 @@ use Aws\Task\AbstractTask;
  */
 class RunStackTask extends AbstractTask
 {
-    
+
     /**
      * Stack name
      * @var string
      */
     protected $name;
-    
+
     /**
      * Stack name
      * @var string
@@ -42,6 +42,11 @@ class RunStackTask extends AbstractTask
      * Update on conflict
      */
     protected $updateOnConflict = false;
+
+    /**
+     * @var string
+     */
+    protected $capabilities;
 
     /**
      * Stack params array
@@ -109,6 +114,22 @@ class RunStackTask extends AbstractTask
     }
 
     /**
+     * @return mixed
+     */
+    public function getCapabilities()
+    {
+        return $this->capabilities;
+    }
+
+    /**
+     * @param mixed $capabilities
+     */
+    public function setCapabilities($capabilities)
+    {
+        $this->capabilities = $capabilities;
+    }
+
+    /**
      * Called by phing for each <param/> tag
      * @return StackParam
      */
@@ -128,7 +149,7 @@ class RunStackTask extends AbstractTask
         foreach($this->params as $param) {
             $result[] = $param->toArray();
         }
-        
+
         return $result;
     }
 
@@ -150,37 +171,39 @@ class RunStackTask extends AbstractTask
     public function main()
     {
         $this->validate();
-        
+
         $cloudFormation = $this->getService();
-        
+
+        $stackProperties = [
+            'StackName' => $this->getName(),
+            'TemplateBody' => file_get_contents($this->getTemplatePath()),
+            'Parameters'    => $this->getParamsArray()
+        ];
+
+        if ($this->getCapabilities()) {
+            $stackProperties['Capabilities'] = explode(',', $this->getCapabilities());
+        }
+
         try {
             $cloudFormation->describeStacks([
                 'StackName' => $this->getName()
             ]);
             // update
-            $cloudFormation->updateStack([
-                'StackName' => $this->getName(),
-                'TemplateBody' => file_get_contents($this->getTemplatePath()),
-                'Parameters'    => $this->getParamsArray()
-            ]);
+            $cloudFormation->updateStack($stackProperties);
         } catch (CloudFormationException $e) {
             if ($this->getUpdateOnConflict()) {
-                $cloudFormation->createStack([
-                    'StackName' => $this->getName(),
-                    'TemplateBody' => file_get_contents($this->getTemplatePath()),
-                    'Parameters'    => $this->getParamsArray()
-                ]);
+                $cloudFormation->createStack($stackProperties);
             } else {
                 throw new \BuildException('Stack ' . $this->getName() . ' already exists!');
             }
         }
-        
+
         while (!$this->stackIsReady()) {
             sleep(3);
             $this->log("Wating for stack provisioning...");
         }
     }
-    
+
     protected function stackIsReady()
     {
         try {

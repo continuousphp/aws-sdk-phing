@@ -191,10 +191,12 @@ class RunStackTask extends AbstractTask
             // update
             $cloudFormation->updateStack($stackProperties);
         } catch (CloudFormationException $e) {
-            if ($this->getUpdateOnConflict()) {
-                $cloudFormation->createStack($stackProperties);
-            } else {
-                throw new \BuildException('Stack ' . $this->getName() . ' already exists!');
+            if ($e->getMessage() != 'No updates are to be performed.') {
+                if ($this->getUpdateOnConflict()) {
+                    $cloudFormation->createStack($stackProperties);
+                } else {
+                    throw new \BuildException('Stack ' . $this->getName() . ' already exists!');
+                }
             }
         }
 
@@ -211,7 +213,8 @@ class RunStackTask extends AbstractTask
                 ->describeStacks([
                     'StackName' => $this->getName()
                 ]);
-            switch ($stack['Stack']['StackStatus']) {
+
+            switch ($stack['Stacks'][0]['StackStatus']) {
                 case 'CREATE_COMPLETE':
                 case 'UPDATE_COMPLETE':
                 case 'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS':
@@ -221,7 +224,7 @@ class RunStackTask extends AbstractTask
                 case 'CREATE_IN_PROGRESS':
                     return false;
                 default:
-                    throw new \BuildException('Failed to run stack ' . $this->getName() . ' (' . $stack['Stack']['StackStatus'] . ') !');
+                    throw new \BuildException('Failed to run stack ' . $this->getName() . ' (' . $stack['Stacks'][0]['StackStatus'] . ') !');
             }
         } catch (CloudFormationException $e) {
             return false;

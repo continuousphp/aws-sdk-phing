@@ -10,3 +10,4 @@ composer.lock
 nbproject
 tmp/
 /vendor
+build.xml

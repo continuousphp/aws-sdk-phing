@@ -16,7 +16,7 @@
         "phing/phing":                              "~2.7"
     },
     "autoload": {
-        "psr-0": {
+        "psr-4": {
             "Aws\\": "src/"
         }
     }

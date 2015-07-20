@@ -59,6 +59,8 @@ class RunStackTask extends AbstractTask
      */
     protected $service;
 
+    protected $events = [];
+
     /**
      * @return string $name
      */
@@ -191,7 +193,7 @@ class RunStackTask extends AbstractTask
             // update
             $cloudFormation->updateStack($stackProperties);
         } catch (CloudFormationException $e) {
-            if ($e->getMessage() != 'No updates are to be performed.') {
+            if (!preg_match('/No updates are to be performed./', $e->getMessage())) {
                 if ($this->getUpdateOnConflict()) {
                     $cloudFormation->createStack($stackProperties);
                 } else {
@@ -202,16 +204,18 @@ class RunStackTask extends AbstractTask
 
         while (!$this->stackIsReady()) {
             sleep(3);
-            $this->log("Waiting for stack provisioning...");
+            if (empty($this->events)) {
+                $this->log("Waiting for stack provisioning...");
+            }
         }
-        
+
         $stacks = $cloudFormation->describeStacks([
             'StackName' => $this->getName()
         ]);
-        
+
         $output = '';
         foreach ($stacks['Stacks'][0]['Outputs'] as $row) {
-            $output.= $row['OutputKey'] . ': ' . $row['OutputValue'] . PHP_EOL;
+            $output.= PHP_EOL . $row['OutputKey'] . ': ' . $row['OutputValue'];
         }
         $this->log($output);
     }
@@ -229,9 +233,18 @@ class RunStackTask extends AbstractTask
                 case 'UPDATE_COMPLETE':
                 case 'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS':
                     return true;
-                case '':
                 case 'UPDATE_IN_PROGRESS':
                 case 'CREATE_IN_PROGRESS':
+                    $events = $this->getService()
+                        ->describeStackEvents([
+                            'StackName' => $this->getName()
+                        ]);
+                    $events = array_column(array_reverse($events['StackEvents']), null, 'EventId');
+                    foreach(array_diff_assoc($events, $this->events) as $event) {
+                        $this->log($event['Timestamp'] . ': ' . $event['ResourceType'] . ' (' . $event['ResourceStatus'] . ')');
+                    }
+                    $this->events = $events;
+                case '':
                     return false;
                 default:
                     throw new \BuildException('Failed to run stack ' . $this->getName() . ' (' . $stack['Stacks'][0]['StackStatus'] . ') !');

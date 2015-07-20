@@ -144,7 +144,8 @@ class RunStackTask extends AbstractTask
      * Called by phing for each <param/> tag
      * @return StackParam
      */
-    public function createParam() {
+    public function createParam()
+    {
         $param = new StackParam();
         $this->params[] = $param;
         return $param;
@@ -154,7 +155,8 @@ class RunStackTask extends AbstractTask
      * Called by phing for each <output/> tag
      * @return StackOutput
      */
-    public function createOutput() {
+    public function createOutput()
+    {
         $output = new StackOutput();
         $this->outputs[] = $output;
         return $output;
@@ -164,7 +166,8 @@ class RunStackTask extends AbstractTask
      * @param string $name
      * @return StackOutput
      */
-    public function getOutput($name) {
+    public function getOutput($name)
+    {
         foreach ($this->outputs as $output) {
             if ($output->getName()==$name) {
                 return $output;
@@ -176,7 +179,8 @@ class RunStackTask extends AbstractTask
      * Return the array representation of the params
      * @return array
      */
-    public function getParamsArray() {
+    public function getParamsArray()
+    {
         $result = [];
 
         foreach($this->params as $param) {

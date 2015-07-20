@@ -1,13 +1,25 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: antoine
- * Date: 01/07/2014
- * Time: 17:22
+ * StackParam.php
+ *
+ * @date        16/07/2015
+ * @author      Frederic Dewinne <frederic@continuousphp.com>
+ * @copyright   Copyright (c) 2014 continuousphp (http://continuousphp.com)
+ * @file        StackParam.php
+ * @link        http://github.com/continuousphp/aws-sdk-phing for the canonical source repository
+ * @license     http://opensource.org/licenses/MIT MIT License
  */
 
 namespace Aws\Task\CloudFormation;
 
+/**
+ * StackParam
+ *
+ * @package     Aws
+ * @subpackage  CloudFormation
+ * @author      Frederic Dewinne <frederic@continuousphp.com>
+ * @license     http://opensource.org/licenses/MIT MIT License
+ */
 class StackParam
 {
 

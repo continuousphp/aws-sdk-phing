@@ -1,26 +1,26 @@
 <?php
 /**
- * StackOutput.php
+ * AutoScalingGroup.php
  *
  * @date        16/07/2015
  * @author      Frederic Dewinne <frederic@continuousphp.com>
  * @copyright   Copyright (c) 2014 continuousphp (http://continuousphp.com)
- * @file        StackOutput.php
+ * @file        AutoScalingGroup.php
  * @link        http://github.com/continuousphp/aws-sdk-phing for the canonical source repository
  * @license     http://opensource.org/licenses/MIT MIT License
  */
 
-namespace Aws\Task\CloudFormation;
+namespace Aws\Task\CodeDeploy;
 
 /**
- * StackOutput
+ * AutoScalingGroup
  *
  * @package     Aws
- * @subpackage  CloudFormation
+ * @subpackage  CodeDeploy
  * @author      Frederic Dewinne <frederic@continuousphp.com>
  * @license     http://opensource.org/licenses/MIT MIT License
  */
-class StackOutput
+class AutoScalingGroup
 {
 
     /**
@@ -29,9 +29,13 @@ class StackOutput
     protected $name;
 
     /**
-     * @var string
+     * Return the string representation of the param
+     * @return string
      */
-    protected $property;
+    public function __toString() {
+        return $this->getName();
+    }
+
 
     /**
      * @param mixed $name
@@ -45,31 +49,9 @@ class StackOutput
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getName() {
-        return $this->name;
+        return (string)$this->name;
     }
-
-    /**
-     * @param mixed $property
-     *
-     * @return $this
-     */
-    public function setProperty($property) {
-        $this->property = $property;
-
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getProperty() {
-        return $this->property;
-    }
-
-
-
-
 }

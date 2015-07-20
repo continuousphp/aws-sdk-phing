@@ -11,7 +11,6 @@
  */
 
 namespace Aws\Task\CodeDeploy;
-use Aws\CloudFormation\Exception\CloudFormationException;
 use Aws\CodeDeploy\CodeDeployClient;
 use Aws\Task\AbstractTask;
 
@@ -19,7 +18,7 @@ use Aws\Task\AbstractTask;
  * DeploymentGroupTask
  *
  * @package     Aws
- * @subpackage  CloudFormation
+ * @subpackage  CodeDeploy
  * @author      Frederic Dewinne <frederic@continuousphp.com>
  * @license     http://opensource.org/licenses/MIT MIT License
  */
@@ -41,6 +40,11 @@ class DeploymentGroupTask extends AbstractTask
      * @var CodeDeployClient
      */
     protected $service;
+
+    /**
+     * @var array
+     */
+    protected $autoScalingGroups = [];
 
     /**
      * @return string $name
@@ -88,6 +92,24 @@ class DeploymentGroupTask extends AbstractTask
         }
 
         return $this->service;
+    }
+
+    /**
+     * Called by phing for each <autoScalingGroup/> tag
+     * @return AutoScalingGroup
+     */
+    public function createAutoScalingGroup()
+    {
+        $group = new AutoScalingGroup();
+        $this->autoScalingGroups[] = $group;
+        return $group;
+    }
+    
+    protected function getAutoScalingGroups()
+    {
+        return array_map(function (AutoScalingGroup $group) {
+            return (string)$group;
+        }, $this->autoScalingGroups);
     }
 
     /**

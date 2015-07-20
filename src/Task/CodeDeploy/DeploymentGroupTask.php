@@ -12,6 +12,7 @@
 
 namespace Aws\Task\CodeDeploy;
 use Aws\CodeDeploy\CodeDeployClient;
+use Aws\CodeDeploy\Exception\CodeDeployException;
 use Aws\Task\AbstractTask;
 
 /**
@@ -32,9 +33,24 @@ class DeploymentGroupTask extends AbstractTask
     protected $name;
 
     /**
+     * @var
+     */
+    protected $application;
+
+    /**
      * Update on conflict
      */
     protected $updateOnConflict = false;
+
+    /**
+     * @var string
+     */
+    protected $deploymentConfigName;
+
+    /**
+     * @var string
+     */
+    protected $serviceRole;
 
     /**
      * @var CodeDeployClient
@@ -67,6 +83,24 @@ class DeploymentGroupTask extends AbstractTask
     /**
      * @return mixed
      */
+    public function getApplication()
+    {
+        return $this->application;
+    }
+
+    /**
+     * @param mixed $application
+     * @return $this
+     */
+    public function setApplication($application)
+    {
+        $this->application = $application;
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
     public function getUpdateOnConflict()
     {
         return $this->updateOnConflict;
@@ -79,6 +113,42 @@ class DeploymentGroupTask extends AbstractTask
     public function setUpdateOnConflict($updateOnConflict)
     {
         $this->updateOnConflict = $updateOnConflict;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDeploymentConfigName()
+    {
+        return $this->deploymentConfigName;
+    }
+
+    /**
+     * @param string $deploymentConfigName
+     * @return $this
+     */
+    public function setDeploymentConfigName($deploymentConfigName)
+    {
+        $this->deploymentConfigName = $deploymentConfigName;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getServiceRole()
+    {
+        return $this->serviceRole;
+    }
+
+    /**
+     * @param string $serviceRole
+     * @return $this
+     */
+    public function setServiceRole($serviceRole)
+    {
+        $this->serviceRole = $serviceRole;
         return $this;
     }
 
@@ -104,7 +174,7 @@ class DeploymentGroupTask extends AbstractTask
         $this->autoScalingGroups[] = $group;
         return $group;
     }
-    
+
     protected function getAutoScalingGroups()
     {
         return array_map(function (AutoScalingGroup $group) {
@@ -120,6 +190,42 @@ class DeploymentGroupTask extends AbstractTask
         $this->validate();
 
         $codeDeploy = $this->getService();
+
+        $config = [
+            'applicationName' => $this->getApplication(),
+            'currentDeploymentGroupName' => $this->getName(),
+            'autoScalingGroups' => $this->getAutoScalingGroups(),
+            'serviceRoleArn' => $this->getServiceRole()
+        ];
+
+        if ($this->getDeploymentConfigName()) {
+            $config['deploymentConfigName'] = $this->getDeploymentConfigName();
+        }
+
+        try {
+            $codeDeploy
+                ->getDeploymentGroup([
+                    'applicationName' => $this->getApplication(),
+                    'deploymentGroupName' => $this->getName()
+                ]);
+            // update
+            if ($this->updateOnConflict) {
+                $config['currentDeploymentGroupName'] = $this->getName();
+                $codeDeploy->updateDeploymentGroup($config);
+                $this->log('Deployment Group [' . $this->getName() . '] successfully updated.');
+            } else {
+                throw new \BuildException('Deployment Group [' . $this->getName() . '] already exists!');
+            }
+        } catch (CodeDeployException $e) {
+            if ($e->getAwsErrorCode() == 'DeploymentGroupDoesNotExistException') {
+                // create
+                $config['deploymentGroupName'] = $this->getName();
+                $codeDeploy->createDeploymentGroup($config);
+                $this->log('Deployment Group [' . $this->getName() . '] successfully created.');
+            } else {
+                throw $e;
+            }
+        }
     }
 
     /**
@@ -132,6 +238,10 @@ class DeploymentGroupTask extends AbstractTask
 
         if(!$this->getName()) {
             throw new \BuildException('You must set the name attribute.');
+        }
+
+        if(!$this->getApplication()) {
+            throw new \BuildException('You must set the application attribute.');
         }
 
     }

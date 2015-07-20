@@ -36,7 +36,6 @@ class AutoScalingGroup
         return $this->getName();
     }
 
-
     /**
      * @param mixed $name
      *

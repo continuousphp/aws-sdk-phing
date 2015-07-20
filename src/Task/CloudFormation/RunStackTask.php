@@ -253,7 +253,7 @@ class RunStackTask extends AbstractTask
             $outputLog.= PHP_EOL . $row['OutputKey'] . ': ' . $row['OutputValue'];
             if ($output = $this->getOutput($row['OutputKey'])) {
                 /** @var StackOutput $output */
-                $this->project->setProperty($this->{$output->getProperty()}, $row['OutputValue']);
+                $this->project->setProperty($output->getProperty(), $row['OutputValue']);
             }
         }
         $this->log($outputLog);

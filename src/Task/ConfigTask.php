@@ -11,7 +11,7 @@
  */
 
 namespace Aws\Task;
-use Aws\Common\Aws;
+use Aws\Sdk;
 
 /**
  * ConfigTask
@@ -120,7 +120,9 @@ class ConfigTask extends AbstractTask
      */
     public function main()
     {
-        $config = [];
+        $config = [
+            'version'  => 'latest'
+        ];
 
         if ($this->getRegion()) {
             $config['region'] = $this->getRegion();
@@ -133,6 +135,6 @@ class ConfigTask extends AbstractTask
             $config['profile'] = $this->getProfile();
         }
 
-        $this->setServiceLocator(Aws::factory($config));
+        $this->setServiceLocator(new Sdk($config));
     }
 } 

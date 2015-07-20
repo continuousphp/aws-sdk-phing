@@ -159,7 +159,7 @@ class RunStackTask extends AbstractTask
     public function getService()
     {
         if (is_null($this->service)) {
-            $this->service = $this->getServiceLocator()->get('CloudFormation');
+            $this->service = $this->getServiceLocator()->createCloudFormation();
         }
 
         return $this->service;

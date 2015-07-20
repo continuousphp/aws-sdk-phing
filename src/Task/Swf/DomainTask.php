@@ -11,6 +11,7 @@
  */
 
 namespace Aws\Task\Swf;
+use Aws\Swf\Exception\SwfException;
 use Aws\Swf\Exception\UnknownResourceException;
 use Aws\Swf\SwfClient;
 use Aws\Task\AbstractTask;
@@ -111,7 +112,7 @@ class DomainTask extends AbstractTask
     public function getService()
     {
         if (is_null($this->service)) {
-            $this->service = $this->getServiceLocator()->get('Swf');
+            $this->service = $this->getServiceLocator()->createSwf();
         }
 
         return $this->service;
@@ -140,7 +141,7 @@ class DomainTask extends AbstractTask
             }
 
             $this->log('The domain "' . $this->getName() . '" already exists');
-        } catch (UnknownResourceException $e) {
+        } catch (SwfException $e) {
             $this->log('Creating "' . $this->getName() . '" domain');
 
             $this->getService()->registerDomain([

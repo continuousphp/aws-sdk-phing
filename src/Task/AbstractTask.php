@@ -11,7 +11,7 @@
  */
 
 namespace Aws\Task;
-use Aws\Common\Aws;
+use Aws\Sdk;
 
 /**
  * AbstractTask
@@ -23,12 +23,12 @@ use Aws\Common\Aws;
 abstract class AbstractTask extends \Task
 {
     /**
-     * @var Aws
+     * @var Sdk
      */
     static protected $serviceLocator;
 
     /**
-     * @return Aws
+     * @return Sdk
      */
     protected function getServiceLocator()
     {
@@ -36,10 +36,10 @@ abstract class AbstractTask extends \Task
     }
 
     /**
-     * @param Aws $serviceLocator
+     * @param Sdk $serviceLocator
      * @return $this
      */
-    protected function setServiceLocator(Aws $serviceLocator)
+    protected function setServiceLocator(Sdk $serviceLocator)
     {
         self::$serviceLocator = $serviceLocator;
 

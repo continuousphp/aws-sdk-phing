@@ -11,6 +11,7 @@
  */
 
 namespace Aws\Task\Swf;
+use Aws\Swf\Exception\SwfException;
 use Aws\Swf\Exception\UnknownResourceException;
 use Aws\Swf\SwfClient;
 use Aws\Task\AbstractTask;
@@ -97,7 +98,7 @@ class WorkflowTask extends AbstractTask
     }
 
     /**
-     * @return the $name
+     * @return string $name
      */
     public function getName()
     {
@@ -234,7 +235,7 @@ class WorkflowTask extends AbstractTask
     public function getService()
     {
         if (is_null($this->service)) {
-            $this->service = $this->getServiceLocator()->get('Swf');
+            $this->service = $this->getServiceLocator()->createSwf();
         }
 
         return $this->service;
@@ -275,7 +276,7 @@ class WorkflowTask extends AbstractTask
             }
 
             $this->log('The workflow "' . $this->getName() . '" already exists');
-        } catch (UnknownResourceException $e) {
+        } catch (SwfException $e) {
             $this->log('Creating "' . $this->getName() . '" v.' . $this->getVersion() . ' workflow');
 
             $params = [

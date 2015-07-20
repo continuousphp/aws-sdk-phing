@@ -55,10 +55,19 @@ class RunStackTask extends AbstractTask
     protected $params = [];
 
     /**
+     * Stack params array
+     * @var StackOutput[]
+     */
+    protected $outputs = [];
+
+    /**
      * @var CloudFormationClient
      */
     protected $service;
 
+    /**
+     * @var array
+     */
     protected $events = [];
 
     /**
@@ -142,6 +151,28 @@ class RunStackTask extends AbstractTask
     }
 
     /**
+     * Called by phing for each <output/> tag
+     * @return StackOutput
+     */
+    public function createOutput() {
+        $output = new StackOutput();
+        $this->outputs[] = $output;
+        return $output;
+    }
+
+    /**
+     * @param string $name
+     * @return StackOutput
+     */
+    public function getOutput($name) {
+        foreach ($this->outputs as $output) {
+            if ($output->getName()==$name) {
+                return $output;
+            }
+        }
+    }
+
+    /**
      * Return the array representation of the params
      * @return array
      */
@@ -213,11 +244,15 @@ class RunStackTask extends AbstractTask
             'StackName' => $this->getName()
         ]);
 
-        $output = '';
+        $outputLog = '';
         foreach ($stacks['Stacks'][0]['Outputs'] as $row) {
-            $output.= PHP_EOL . $row['OutputKey'] . ': ' . $row['OutputValue'];
+            $outputLog.= PHP_EOL . $row['OutputKey'] . ': ' . $row['OutputValue'];
+            if ($output = $this->getOutput($row['OutputKey'])) {
+                /** @var StackOutput $output */
+                $this->project->setProperty($this->{$output->getProperty()}, $row['OutputValue']);
+            }
         }
-        $this->log($output);
+        $this->log($outputLog);
     }
 
     protected function stackIsReady()

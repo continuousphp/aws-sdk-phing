@@ -4,4 +4,5 @@
     <taskdef name="aws-swf-workflow" classname="Aws\Task\Swf\WorkflowTask" />
     <taskdef name="aws-swf-activity" classname="Aws\Task\Swf\ActivityTask" />
     <taskdef name="aws-cf-runstack" classname="Aws\Task\CloudFormation\RunStackTask" />
+    <taskdef name="aws-deploy-deployment-group" classname="Aws\Task\CodeDeploy\DeploymentGroupTask" />
 </project>

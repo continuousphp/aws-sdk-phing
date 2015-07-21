@@ -249,11 +249,13 @@ class RunStackTask extends AbstractTask
         ]);
 
         $outputLog = '';
-        foreach ($stacks['Stacks'][0]['Outputs'] as $row) {
-            $outputLog.= PHP_EOL . $row['OutputKey'] . ': ' . $row['OutputValue'];
-            if ($output = $this->getOutput($row['OutputKey'])) {
-                /** @var StackOutput $output */
-                $this->project->setProperty($output->getProperty(), $row['OutputValue']);
+        if ($stacks['Stacks'][0]['Outputs']) {
+            foreach ($stacks['Stacks'][0]['Outputs'] as $row) {
+                $outputLog.= PHP_EOL . $row['OutputKey'] . ': ' . $row['OutputValue'];
+                if ($output = $this->getOutput($row['OutputKey'])) {
+                    /** @var StackOutput $output */
+                    $this->project->setProperty($output->getProperty(), $row['OutputValue']);
+                }
             }
         }
         $this->log($outputLog);

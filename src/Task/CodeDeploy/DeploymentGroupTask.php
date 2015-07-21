@@ -63,6 +63,11 @@ class DeploymentGroupTask extends AbstractTask
     protected $autoScalingGroups = [];
 
     /**
+     * @var array
+     */
+    protected $ec2TagFilters = [];
+
+    /**
      * @return string $name
      */
     public function getName()
@@ -175,11 +180,35 @@ class DeploymentGroupTask extends AbstractTask
         return $group;
     }
 
+    /**
+     * @return array
+     */
     protected function getAutoScalingGroups()
     {
         return array_map(function (AutoScalingGroup $group) {
             return (string)$group;
         }, $this->autoScalingGroups);
+    }
+
+    /**
+     * Called by phing for each <ec2TagFilter/> tag
+     * @return Ec2TagFilter
+     */
+    public function createEc2TagFilter()
+    {
+        $filter = new Ec2TagFilter();
+        $this->ec2TagFilters[] = $filter;
+        return $filter;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getEc2TagFilters()
+    {
+        return array_map(function (Ec2TagFilter $filter) {
+            return $filter->toArray();
+        }, $this->ec2TagFilters);
     }
 
     /**
@@ -194,9 +223,16 @@ class DeploymentGroupTask extends AbstractTask
         $config = [
             'applicationName' => $this->getApplication(),
             'currentDeploymentGroupName' => $this->getName(),
-            'autoScalingGroups' => $this->getAutoScalingGroups(),
             'serviceRoleArn' => $this->getServiceRole()
         ];
+        
+        if ($this->autoScalingGroups) {
+            $config['autoScalingGroups'] = $this->getAutoScalingGroups();
+        }
+        
+        if ($this->ec2TagFilters) {
+            $config['ec2TagFilters'] = $this->getEc2TagFilters();
+        }
 
         if ($this->getDeploymentConfigName()) {
             $config['deploymentConfigName'] = $this->getDeploymentConfigName();

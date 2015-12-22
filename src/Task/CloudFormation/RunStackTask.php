@@ -230,7 +230,15 @@ class RunStackTask extends AbstractTask
         } catch (CloudFormationException $e) {
             if (!preg_match('/No updates are to be performed./', $e->getMessage())) {
                 if ($this->getUpdateOnConflict()) {
-                    $cloudFormation->createStack($stackProperties);
+                    try {
+                        $cloudFormation->createStack($stackProperties);
+                    } catch (CloudFormationException $e) {
+                        if ($e->getAwsErrorCode()!='AlreadyExistsException') {
+                            throw $e;
+                        } else {
+                            $this->log('stack [' . $this->getName() . '] creation already in progress.');
+                        }
+                    }
                 } else {
                     throw new \BuildException('Stack ' . $this->getName() . ' already exists!');
                 }

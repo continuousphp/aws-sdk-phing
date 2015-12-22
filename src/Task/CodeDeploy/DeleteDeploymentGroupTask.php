@@ -115,6 +115,7 @@ class DeleteDeploymentGroupTask extends AbstractTask
                     'applicationName' => $this->getApplication(),
                     'deploymentGroupName' => $this->getName()
                 ]);
+            $this->log('Deployment Group [' . $this->getName() . '] has been deleted.');
         } catch (CodeDeployException $e) {
             if ($e->getAwsErrorCode() == 'DeploymentGroupDoesNotExistException') {
                 $this->log('Deployment Group [' . $this->getName() . '] does not exist.');

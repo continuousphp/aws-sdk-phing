@@ -1,0 +1,26 @@
+<project name="aws-sdk" default="help" basedir=".">
+    <import file="./tasks.xml" />
+    <property name="aws.profile" value="" />
+
+    <target name="help" description="List available targets">
+        <exec executable="vendor/bin/phing"
+              passthru="true">
+            <arg value="-l"/>
+        </exec>
+    </target>
+
+    <target name="run-stack">
+        <aws-config region="${aws.region}" profile="${aws.profile}" />
+        <aws-cf-runstack
+                name="${cf.stackName}"
+                updateOnConflict="true"
+                capabilities="CAPABILITY_IAM"
+                templatePath="./cluster.template">
+            <param name="KeyName" value="${cf.KeyName}" />
+            <param name="DBName" value="${cf.DBName}" />
+            <param name="DBUser" value="${cf.DBUser}" />
+            <param name="DBPassword" value="${cf.DBPassword}" />
+            <param name="env" value="${cf.stackName}" />
+        </aws-cf-runstack>
+    </target>
+</project>

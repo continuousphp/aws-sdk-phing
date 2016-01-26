@@ -253,13 +253,20 @@ class DeploymentGroupTask extends AbstractTask
                 throw new \BuildException('Deployment Group [' . $this->getName() . '] already exists!');
             }
         } catch (CodeDeployException $e) {
-            if ($e->getAwsErrorCode() == 'DeploymentGroupDoesNotExistException') {
-                // create
-                $config['deploymentGroupName'] = $this->getName();
-                $codeDeploy->createDeploymentGroup($config);
-                $this->log('Deployment Group [' . $this->getName() . '] successfully created.');
-            } else {
-                throw $e;
+            switch ($e->getAwsErrorCode()) {
+                case 'ApplicationDoesNotExistException':
+                    $codeDeploy->createApplication([
+                        'applicationName' => $config['applicationName']
+                    ]);
+                    $this->log('Application [' . $config['applicationName'] . '] successfully created.');
+                case 'DeploymentGroupDoesNotExistException':
+                    // create deployment group
+                    $config['deploymentGroupName'] = $this->getName();
+                    $codeDeploy->createDeploymentGroup($config);
+                    $this->log('Deployment Group [' . $this->getName() . '] successfully created.');
+                    break;
+                default:
+                    throw $e;
             }
         }
     }

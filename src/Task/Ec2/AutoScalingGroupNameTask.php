@@ -96,12 +96,18 @@ class AutoScalingGroupNameTask extends AbstractTask
     public function main()
     {
         $ec2 = $this->getService();
-        
+
         $instance = $ec2->describeInstances([
             'InstanceIds' => [$this->getInstanceId()]
         ]);
 
-        var_dump($instance);
-//        $this->project->setProperty($this->getProperty(), $instance);
+        $tag = array_filter(
+            $instance['Reservations'][0]['Instances'][0]['Tags'],
+            function ($tag) {
+                return $tag['Key'] == 'aws:autoscaling:groupName';
+            }
+        );
+        
+        $this->project->setProperty($this->getProperty(), array_shift($tag)['Value']);
     }
 }

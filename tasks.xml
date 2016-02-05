@@ -1,10 +1,11 @@
 <project>
+    <taskdef name="ec2-autoscalinggroup-name" classname="Aws\Task\Ec2\AutoScalingGroupNameTask" />
     <taskdef name="aws-config" classname="Aws\Task\ConfigTask" />
-    <taskdef name="aws-swf-domain" classname="Aws\Task\Swf\DomainTask" />
-    <taskdef name="aws-swf-workflow" classname="Aws\Task\Swf\WorkflowTask" />
-    <taskdef name="aws-swf-activity" classname="Aws\Task\Swf\ActivityTask" />
     <taskdef name="aws-cf-runstack" classname="Aws\Task\CloudFormation\RunStackTask" />
     <taskdef name="aws-cf-deletestack" classname="Aws\Task\CloudFormation\DeleteStackTask" />
     <taskdef name="aws-deploy-deployment-group" classname="Aws\Task\CodeDeploy\DeploymentGroupTask" />
     <taskdef name="aws-deploy-delete-deployment-group" classname="Aws\Task\CodeDeploy\DeleteDeploymentGroupTask" />
+    <taskdef name="aws-swf-domain" classname="Aws\Task\Swf\DomainTask" />
+    <taskdef name="aws-swf-workflow" classname="Aws\Task\Swf\WorkflowTask" />
+    <taskdef name="aws-swf-activity" classname="Aws\Task\Swf\ActivityTask" />
 </project>

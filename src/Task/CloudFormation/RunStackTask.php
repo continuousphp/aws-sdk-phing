@@ -55,6 +55,12 @@ class RunStackTask extends AbstractTask
     protected $params = [];
 
     /**
+     * Stack tags array
+     * @var StackTag[]
+     */
+    protected $tags = [];
+
+    /**
      * Stack params array
      * @var StackOutput[]
      */
@@ -152,6 +158,17 @@ class RunStackTask extends AbstractTask
     }
 
     /**
+     * Called by phing for each <tag/> tag
+     * @return StackTag
+     */
+    public function createTag()
+    {
+        $tag = new StackTag();
+        $this->tags[] = $tag;
+        return $tag;
+    }
+
+    /**
      * Called by phing for each <output/> tag
      * @return StackOutput
      */
@@ -173,6 +190,21 @@ class RunStackTask extends AbstractTask
                 return $output;
             }
         }
+    }
+
+    /**
+     * Return the array representation of the tags
+     * @return array
+     */
+    public function getTagsArray()
+    {
+        $result = [];
+
+        foreach($this->tags as $tag) {
+            $result[] = $tag->toArray();
+        }
+
+        return $result;
     }
 
     /**
@@ -214,7 +246,8 @@ class RunStackTask extends AbstractTask
         $stackProperties = [
             'StackName' => $this->getName(),
             'TemplateBody' => file_get_contents($this->getTemplatePath()),
-            'Parameters'    => $this->getParamsArray()
+            'Parameters'    => $this->getParamsArray(),
+            'Tags' => $this->getTagsArray()
         ];
 
         if ($this->getCapabilities()) {

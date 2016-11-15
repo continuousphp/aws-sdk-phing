@@ -129,8 +129,10 @@ class ConfigTask extends AbstractTask
         }
 
         if ($this->getKey() && $this->getSecret()) {
-            $config['key'] = $this->getKey();
-            $config['secret'] = $this->getSecret();
+            $config['credentials'] = [
+                'key' => $this->getKey(),
+                'secret' => $this->getSecret(),
+            ];
         } elseif ($this->getProfile()) {
             $config['profile'] = $this->getProfile();
         }

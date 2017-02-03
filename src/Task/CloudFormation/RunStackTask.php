@@ -33,10 +33,16 @@ class RunStackTask extends AbstractTask
     protected $name;
 
     /**
-     * Stack name
+     * Template Path
      * @var string
      */
     protected $templatePath;
+
+    /**
+     * Template URL
+     * @var string
+     */
+    protected $templateUrl;
 
     /**
      * Update on conflict
@@ -109,6 +115,24 @@ class RunStackTask extends AbstractTask
     public function setTemplatePath($templatePath)
     {
         $this->templatePath = $templatePath;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTemplateUrl()
+    {
+        return $this->templateUrl;
+    }
+
+    /**
+     * @param string $templateUrl
+     * @return $this
+     */
+    public function setTemplateUrl($templateUrl)
+    {
+        $this->templateUrl = $templateUrl;
         return $this;
     }
 
@@ -244,11 +268,16 @@ class RunStackTask extends AbstractTask
         $cloudFormation = $this->getService();
 
         $stackProperties = [
-            'StackName' => $this->getName(),
-            'TemplateBody' => file_get_contents($this->getTemplatePath()),
-            'Parameters'    => $this->getParamsArray(),
-            'Tags' => $this->getTagsArray()
+            'StackName'  => $this->getName(),
+            'Parameters' => $this->getParamsArray(),
+            'Tags'       => $this->getTagsArray(),
         ];
+
+        if ($template = $this->getTemplatePath()) {
+            $stackProperties['TemplateBody'] = file_get_contents($template);
+        } else {
+            $stackProperties['TemplateURL'] = $this->getTemplateUrl();
+        }
 
         if ($this->getCapabilities()) {
             $stackProperties['Capabilities'] = explode(',', $this->getCapabilities());
@@ -343,11 +372,11 @@ class RunStackTask extends AbstractTask
      */
     protected function validate() {
 
-        if(!$this->getTemplatePath()) {
-            throw new \BuildException('You must set the template-path attribute.');
+        if (!$this->getTemplatePath() && !$this->getTemplateUrl()) {
+            throw new \BuildException('You must set the templatePath or templateUrl attribute.');
         }
 
-        if(!$this->getName()) {
+        if (!$this->getName()) {
             throw new \BuildException('You must set the name attribute.');
         }
 

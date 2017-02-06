@@ -15,6 +15,7 @@
                 name="${cf.stackName}"
                 updateOnConflict="true"
                 capabilities="CAPABILITY_IAM"
+                roleARN="arn:aws:iam::875000000000:role/eve"
                 templatePath="./cluster.template">
             <param name="KeyName" value="${cf.KeyName}" />
             <param name="DBName" value="${cf.DBName}" />

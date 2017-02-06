@@ -50,9 +50,16 @@ class RunStackTask extends AbstractTask
     protected $updateOnConflict = false;
 
     /**
+     * Give permission to perform operations on IAM
      * @var string
      */
     protected $capabilities;
+
+    /**
+     * AWS ARN of Role used to perform cloudformation operations
+     * @var string
+     */
+    protected $roleARN;
 
     /**
      * Stack params array
@@ -81,6 +88,11 @@ class RunStackTask extends AbstractTask
      * @var array
      */
     protected $events = [];
+
+    /**
+     * @var \DateTimeImmutable
+     */
+    protected $datetimeTaskStart;
 
     /**
      * @return string $name
@@ -171,6 +183,22 @@ class RunStackTask extends AbstractTask
     }
 
     /**
+     * @return mixed
+     */
+    public function getRoleARN()
+    {
+        return $this->roleARN;
+    }
+
+    /**
+     * @param mixed $arn
+     */
+    public function setRoleARN($arn)
+    {
+        $this->roleARN = $arn;
+    }
+
+    /**
      * Called by phing for each <param/> tag
      * @return StackParam
      */
@@ -258,15 +286,8 @@ class RunStackTask extends AbstractTask
         return $this->service;
     }
 
-    /**
-     * Task entry point
-     */
-    public function main()
+    public function stackProperties()
     {
-        $this->validate();
-
-        $cloudFormation = $this->getService();
-
         $stackProperties = [
             'StackName'  => $this->getName(),
             'Parameters' => $this->getParamsArray(),
@@ -283,28 +304,25 @@ class RunStackTask extends AbstractTask
             $stackProperties['Capabilities'] = explode(',', $this->getCapabilities());
         }
 
-        try {
-            $cloudFormation->describeStacks([
-                'StackName' => $this->getName()
-            ]);
-            // update
-            $cloudFormation->updateStack($stackProperties);
-        } catch (CloudFormationException $e) {
-            if (!preg_match('/No updates are to be performed./', $e->getMessage())) {
-                if ($this->getUpdateOnConflict()) {
-                    try {
-                        $cloudFormation->createStack($stackProperties);
-                    } catch (CloudFormationException $e) {
-                        if ($e->getAwsErrorCode()!='AlreadyExistsException') {
-                            throw $e;
-                        } else {
-                            $this->log('stack [' . $this->getName() . '] creation already in progress.');
-                        }
-                    }
-                } else {
-                    throw new \BuildException('Stack ' . $this->getName() . ' already exists!');
-                }
-            }
+        if ($roleARN = $this->getRoleARN()) {
+            $stackProperties['RoleARN'] = $roleARN;
+        }
+
+        return $stackProperties;
+    }
+
+    /**
+     * Task entry point
+     */
+    public function main()
+    {
+        $this->validate();
+        $this->datetimeTaskStart = new \DateTimeImmutable();
+
+        if ($this->describeMainStack()) {
+            $this->updateStacks();
+        } else {
+            $this->creationStacks();
         }
 
         while (!$this->stackIsReady()) {
@@ -314,54 +332,54 @@ class RunStackTask extends AbstractTask
             }
         }
 
-        $stacks = $cloudFormation->describeStacks([
-            'StackName' => $this->getName()
-        ]);
+        $stacks = $this->describeMainStack($e);
+
+        if (null === $stacks) {
+            throw $e;
+        }
 
         $outputLog = '';
-        if ($stacks['Stacks'][0]['Outputs']) {
-            foreach ($stacks['Stacks'][0]['Outputs'] as $row) {
-                $outputLog.= PHP_EOL . $row['OutputKey'] . ': ' . $row['OutputValue'];
+
+        if ($stacks[0]['Outputs']) {
+            foreach ($stacks[0]['Outputs'] as $row) {
+                $outputLog .= PHP_EOL . $row['OutputKey'] . ': ' . $row['OutputValue'];
                 if ($output = $this->getOutput($row['OutputKey'])) {
                     /** @var StackOutput $output */
                     $this->project->setProperty($output->getProperty(), $row['OutputValue']);
                 }
             }
         }
+
         $this->log($outputLog);
     }
 
+    /**
+     * Log the main stack events
+     * Return true when the cloudformation is complete
+     * @return bool
+     */
     protected function stackIsReady()
     {
-        try {
-            $stack = $this->getService()
-                ->describeStacks([
-                    'StackName' => $this->getName()
-                ]);
+        $stacks = $this->describeMainStack();
 
-            switch ($stack['Stacks'][0]['StackStatus']) {
-                case 'CREATE_COMPLETE':
-                case 'UPDATE_COMPLETE':
-                case 'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS':
-                    return true;
-                case 'UPDATE_IN_PROGRESS':
-                case 'CREATE_IN_PROGRESS':
-                    $events = $this->getService()
-                        ->describeStackEvents([
-                            'StackName' => $this->getName()
-                        ]);
-                    $events = array_column(array_reverse($events['StackEvents']), null, 'EventId');
-                    foreach(array_diff_assoc($events, $this->events) as $event) {
-                        $this->log($event['Timestamp'] . ': ' . $event['ResourceType'] . ' (' . $event['ResourceStatus'] . ')');
-                    }
-                    $this->events = $events;
-                case '':
-                    return false;
-                default:
-                    throw new \BuildException('Failed to run stack ' . $this->getName() . ' (' . $stack['Stacks'][0]['StackStatus'] . ') !');
-            }
-        } catch (CloudFormationException $e) {
+        if (null === $stacks) {
             return false;
+        }
+
+        switch ($stacks[0]['StackStatus']) {
+            case 'CREATE_COMPLETE':
+            case 'UPDATE_COMPLETE':
+            case 'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS':
+                return true;
+            case 'UPDATE_IN_PROGRESS':
+            case 'CREATE_IN_PROGRESS':
+                $this->logRecentEvents();
+            case '':
+                return false;
+            default:
+                sleep(3);
+                $this->logRecentEvents();
+                throw new \BuildException('Failed to run stack ' . $this->getName() . ' (' . $stacks[0]['StackStatus'] . ') !');
         }
     }
 
@@ -382,4 +400,113 @@ class RunStackTask extends AbstractTask
 
     }
 
+    /**
+     * Return the Main Stack result or null if cannot be found
+     *
+     * @param CloudFormationException|null $cloudFormationException
+     * @return null
+     */
+    private function describeMainStack(CloudFormationException & $cloudFormationException = null)
+    {
+        $cloudFormation = $this->getService();
+
+        try {
+            $stack = $cloudFormation->describeStacks([
+                'StackName' => $this->getName(),
+            ]);
+
+            return $stack['Stacks'];
+        } catch (CloudFormationException $e) {
+            $cloudFormationException = $e;
+            $message = $e->getMessage();
+        }
+
+        if (1 === preg_match('/AccessDenied|403 Forbidden/i', $message)) {
+            throw new \BuildException('You are not authorized to perform describeStacks on [' . $this->getName() . ']. Check the credentials and AWS policy');
+        }
+
+        if (1 ===  preg_match('/Could not resolve host/i', $message)) {
+            throw new \BuildException("Could not resolve AWS host, thanks to check the AWS_REGION settings or connectivity");
+        }
+
+        return null;
+    }
+
+    /**
+     * Create stacks in cloudformation
+     * @throws \Exception
+     */
+    private function creationStacks()
+    {
+        $cloudFormation = $this->getService();
+
+        if (true !== $this->getUpdateOnConflict()) {
+            throw new \BuildException('Stack ' . $this->getName() . ' not exist. Creation stack was skip due to property updateOnConflict set to false');
+        }
+
+        try {
+            $this->log('Create stacks...');
+            $cloudFormation->createStack($this->stackProperties());
+        } catch (CloudFormationException $e) {
+            if ($e->getAwsErrorCode() !== 'AlreadyExistsException') {
+                throw $e;
+            } else {
+                $this->log('stack [' . $this->getName() . '] creation already in progress.');
+            }
+        }
+    }
+
+    /**
+     * Update stacks in cloudformation
+     * @throws \BuildException
+     */
+    private function updateStacks()
+    {
+        $cloudFormation = $this->getService();
+
+        try {
+            $this->log('Update stacks...');
+            $cloudFormation->updateStack($this->stackProperties());
+        } catch (CloudFormationException $e) {
+            if (1 === preg_match('/No updates are to be performed/i', $e->getMessage())) {
+                $this->log('No updates are to be performed.');
+                return;
+            }
+
+            throw new \BuildException("AwsErrorCode [{$e->getAwsErrorCode()}] Message : " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Log the recent stack events
+     * @note the log already process by this method will be ignored
+     */
+    private function logRecentEvents()
+    {
+        $events = $this->getService()
+            ->describeStackEvents([
+                'StackName' => $this->getName()
+            ]);
+        $events = array_column(array_reverse($events['StackEvents']), null, 'EventId');
+
+        foreach(array_diff_assoc($events, $this->events) as $event) {
+
+            $timestamp = $event['Timestamp'];
+
+            if ($timestamp < $this->datetimeTaskStart) {
+                continue;
+            }
+
+            $this->log($timestamp . ': '
+                . $event['ResourceType'] . ' > ' . $event['LogicalResourceId']
+                . ' (' . $event['ResourceStatus'] . ')'
+            );
+
+            if ($event['ResourceStatusReason']) {
+                $this->log($event['ResourceStatusReason']);
+            }
+        }
+
+        $this->events = $events;
+    }
 }

@@ -12,17 +12,16 @@
     <target name="asg-describe">
         <aws-config region="${aws.region}" profile="${aws.profile}" />
         <ec2-autoscalinggroup-describe
-            name="${asg.name}" asgExistProperty="aws.asg1.exist" outputProperty="aws.asg1.detail">
-        </ec2-autoscalinggroup-describe>
+            name="${asg.name}" asgExistsProperty="aws.asg1.exists" />
 
         <if>
-            <equals arg1="true" arg2="${aws.asg1.exist}" />
+            <equals arg1="true" arg2="${aws.asg1.exists}" />
             <then>
-                <echo message="Yes the ASG exist!" />
+                <echo message="Yes the ASG exists!" />
             </then>
         </if>
 
-        <echo message="The ASG exist: ${aws.asg1.exist}" />
+        <echo message="The ASG exists: ${aws.asg1.exists}" />
         <echo message="The ASG ARN: ${aws.asg1.detail.AutoScalingGroupARN}" />
     </target>
 

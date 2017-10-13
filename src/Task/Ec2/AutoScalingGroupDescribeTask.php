@@ -38,11 +38,11 @@ class AutoScalingGroupDescribeTask extends AbstractTask
     protected $outputProperty;
 
     /**
-     * Property name to set with boolean if AutoScalingGroup exist.
+     * Property name to set with boolean if AutoScalingGroup exists.
      *
      * @var boolean
      */
-    protected $asgExistProperty;
+    protected $asgExistsProperty;
 
     /**
      * @var AutoScalingClient
@@ -80,15 +80,15 @@ class AutoScalingGroupDescribeTask extends AbstractTask
     }
 
     /**
-     * The name of property to set if AutoScalingGroup exist.
+     * The name of property to set if AutoScalingGroup exists.
      *
      * @param string $prop Property name
      *
      * @return void
      */
-    public function setAsgExistProperty($prop)
+    public function setAsgExistsProperty($prop)
     {
-        $this->asgExistProperty = $prop;
+        $this->asgExistsProperty = $prop;
     }
 
     /**
@@ -115,9 +115,9 @@ class AutoScalingGroupDescribeTask extends AbstractTask
         ]);
 
         if (empty($awsResult['AutoScalingGroups'])) {
-            if ($this->asgExistProperty) {
+            if ($this->asgExistsProperty) {
                 $this->project->setProperty(
-                    $this->asgExistProperty,
+                    $this->asgExistsProperty,
                     false
                 );
             }
@@ -126,9 +126,9 @@ class AutoScalingGroupDescribeTask extends AbstractTask
 
         $group = $awsResult['AutoScalingGroups'];
 
-        if ($this->asgExistProperty) {
+        if ($this->asgExistsProperty) {
             $this->project->setProperty(
-                $this->asgExistProperty,
+                $this->asgExistsProperty,
                 true
             );
         }

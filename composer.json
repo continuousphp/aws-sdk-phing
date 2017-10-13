@@ -15,6 +15,9 @@
         "aws/aws-sdk-php":                          "~3.0",
         "phing/phing":                              "~2.7"
     },
+    "require-dev": {
+        "psy/psysh": "@stable"
+    },
     "autoload": {
         "psr-4": {
             "Aws\\": "src/"

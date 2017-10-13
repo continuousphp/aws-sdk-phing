@@ -1,6 +1,7 @@
 <project>
     <taskdef name="ec2-autoscalinggroup-name" classname="Aws\Task\Ec2\AutoScalingGroupNameTask" />
     <taskdef name="ec2-autoscalinggroup-capacity" classname="Aws\Task\Ec2\AutoScalingGroupCapacityTask" />
+    <taskdef name="ec2-autoscalinggroup-describe" classname="Aws\Task\Ec2\AutoScalingGroupDescribeTask" />
     <taskdef name="aws-config" classname="Aws\Task\ConfigTask" />
     <taskdef name="aws-cf-runstack" classname="Aws\Task\CloudFormation\RunStackTask" />
     <taskdef name="aws-cf-deletestack" classname="Aws\Task\CloudFormation\DeleteStackTask" />
